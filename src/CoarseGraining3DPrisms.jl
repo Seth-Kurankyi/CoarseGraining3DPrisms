@@ -15,7 +15,7 @@ function numchop(num::Complex)
 end
 
 
-const K = 2
+const K = 5
 const x = K+1
 const y = K/2
 
@@ -104,7 +104,7 @@ function Gsymb2(i::Float64,j::Float64,m::Float64,k::Float64,l::Float64,n::Float6
 end
 
 
-export prismA, prismB, blocksPrA, blocksPrB, svdA, svdB
+export prismA, prismB, prismB2, blocksPrA, blocksPrB, svdA, svdB
 
 #d1,d2,e1 is triangle we shall cut along 
 function prismA(ja1::Float64,jb1::Float64,jd1::Float64,je1::Float64,jf1::Float64,ja2::Float64,jb2::Float64,
@@ -126,6 +126,12 @@ function prismB(ja1::Float64,jb1::Float64,jd1p::Float64,je1::Float64,jf1::Float6
     return sol
 end
 
+function prismB2(ja1::Float64,jb1::Float64,jd1::Float64,je1::Float64,jf1::Float64,ja2::Float64,jb2::Float64,
+		                 jd2::Float64,je2::Float64,jf2::Float64,jc::Float64,jg::Float64)
+    return prismA(ja2,jb2,jd2,je2,jf2,ja1,jb1,jd1,je1,jf1,jc,jg)
+end
+
+#APrism(j5,j4,j7,j2,j1,jb,j3,j8,ja,j9,j6,jc) 
 
 function blocksPrA(Prsm::Array{Float64,12},jd1::Float64,jd2::Float64,je1::Float64)
     mat = zeros(x^3,x^6)
