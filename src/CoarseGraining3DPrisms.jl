@@ -33,7 +33,7 @@ end
 
 #Define quantum numbers qn (this is real)
 function qn(n::Float64)
-    sol = (exp(pi*n*im/(K+2)) - exp(-pi*n*im/(K+2))) / (exp(pi*im/(K+2)) - exp(-pi*im/(K+2)))
+    sol = (exp(pi*n*im/(K+2)) - exp(-pi*n*im/(K+2))) / (exp(pi*im/(K+2)) - exp(-pi*im/(K+2))) 
     return real(sol)
 end
 
@@ -52,7 +52,7 @@ function visqrt(i::Float64)
     return sol
 end
 
-#Define triangle equality
+#Define triangle equality 
 function trian(i::Float64,j::Float64,k::Float64)
     sol = 0
     if delta(i,j,k) == 1
@@ -65,7 +65,7 @@ end
 function RacWig6j(i::Float64,j::Float64,m::Float64,k::Float64,l::Float64,n::Float64)
     a = i+j+m; b = i+l+n; c = k+j+n; d = k+l+m;  e = i+j+k+l; f = i+k+m+n; g = j+l+m+n
     sol = 0
-    if delta(i,j,m) != 0 && delta(i,l,n) != 0 && delta(k,j,n) != 0 && delta(k,l,m) != 0
+    if delta(i,j,m) != 0 && delta(i,l,n) != 0 && delta(k,j,n) != 0 && delta(k,l,m) != 0  
         sumz = 0
         for z in max(a,b,c,d):min(e,f,g)
             sumz += (-1)^z *qnfact(z+1)/
@@ -96,7 +96,7 @@ end
 
 #Define G-symbol 2
 function Gsymb2(i::Float64,j::Float64,m::Float64,k::Float64,l::Float64,n::Float64)
-    sol = 0
+    sol = 0 
     if delta(i,j,m) != 0 && delta(i,l,n) != 0 && delta(k,j,n) != 0 && delta(k,l,m) != 0
         sol = (-1+0im)^(i+j+k+l+m+n)*RacWig6j(i,j,m,k,l,n)
     end
@@ -104,13 +104,13 @@ function Gsymb2(i::Float64,j::Float64,m::Float64,k::Float64,l::Float64,n::Float6
 end
 
 
-export prismA, prismB, prismB2, blocksPrA, blocksPrB, svdA, svdB
+export prismA, prismB, prismB2, blocksPrA, blocksPrB, blockReduceA, blockReduceA1, blockReduceA2, svdA, svdB
 
-#d1,d2,e1 is triangle we shall cut along
+#d1,d2,e1 is triangle we shall cut along 
 function prismA(ja1::Float64,jb1::Float64,jd1::Float64,je1::Float64,jf1::Float64,ja2::Float64,jb2::Float64,
 		                 jd2::Float64,je2::Float64,jf2::Float64,jc::Float64,jg::Float64)
-    sol = 0
-    if delta(jd1,jd2,je1) != 0 && delta(jd1,jb1,jg) != 0 && delta(ja1,jd2,jg) != 0 && delta(ja1,jb1,je1) != 0 && delta(jd1,jc,jb2) != 0 && delta(jf1,jd2,jb2) != 0 && delta(jf1,jc,je1) != 0 && delta(jd1,ja2,jf2) != 0 && delta(jc,je2,jf2) != 0 && delta(jb2,je2,ja2) != 0
+    sol = 0 
+    if delta(jd1,jd2,je1) != 0 && delta(jd1,jb1,jg) != 0 && delta(ja1,jd2,jg) != 0 && delta(ja1,jb1,je1) != 0 && delta(jd1,jc,jb2) != 0 && delta(jf1,jd2,jb2) != 0 && delta(jf1,jc,je1) != 0 && delta(jd1,ja2,jf2) != 0 && delta(jc,je2,jf2) != 0 && delta(jb2,je2,ja2) != 0  
         dims = visqrt(ja1)*visqrt(jb1)*visqrt(jg)*visqrt(jf1)*visqrt(jc)*visqrt(jb2)*visqrt(je2)*visqrt(ja2)*visqrt(jf2)*visqrt(jd1)*visqrt(jd2)*visqrt(je1)
         sol =  dims*Gsymb(jd1,jd2,je1,ja1,jb1,jg) * Gsymb(jd1,jd2,je1,jf1,jc,jb2) * Gsymb(jd1,jc,jb2,je2,ja2,jf2)
     end
@@ -163,11 +163,34 @@ function blocksPrB(Prsm::Array{Float64,12},jd2::Float64,jd1::Float64,je2::Float6
     return mat
 end
 
-
-
-
-
-
+function blockReduceA(ampJ::Array{Any,1},jd1::Float64,jd2::Float64,je1::Float64)
+    #a = Float64[] 
+    #b = Array{Int64,1}[]
+    #ampInfo = [] # will contain indices and amplitudes
+    # position of d1 = 3, d2= 8 and e1 = 4
+    ampInfo = ampJ[findall(x-> x[1][3] == jd1 && x[1][8] == jd2 && x[1][4] == je1 , ampJ)]
+    nzcol = Array{Float64,1}[]
+    #for ja1 in 0.:0.5:y, jb1 in 0.:0.5:y, jg in 0.:0.5:y
+    nzrow = Array{Float64,1}[]
+    #hh = unique!([ [ampInfo[i][1][1],ampInfo[i][1][2],ampInfo[i][1][12]] for 1:length(ampInfo) ])
+    for i in 1:length(ampInfo) # position of a1 = 1, b1 = 2 g = 12
+        push!(nzcol,[ampInfo[i][1][1],ampInfo[i][1][2],ampInfo[i][1][12]])
+        push!(nzrow,[ampInfo[i][1][5],ampInfo[i][1][6],ampInfo[i][1][7],ampInfo[i][1][9],ampInfo[i][1][10],ampInfo[i][1][11]])
+    end
+    unique!(nzcol)
+    unique!(nzrow)
+    dd = zeros(length(nzcol),length(nzrow))
+    if length(dd) != 0
+        for i in 1:length(ampInfo)
+            qa = findall(x-> x == [ampInfo[i][1][1], ampInfo[i][1][2], ampInfo[i][1][12]],nzcol)
+            qb = findall(x-> x == [ampInfo[i][1][5], ampInfo[i][1][6], ampInfo[i][1][7], ampInfo[i][1][9], ampInfo[i][1][10], ampInfo[i][1][11] ], nzrow)
+            dd[qa,qb] = [ampInfo[i][2]]
+        end
+        return nzcol,nzrow, dd
+    else
+        return 0,0,0
+    end
+end
 
 function svdA(prA::Array{Float64,12},ja::Float64,jb::Float64,jc::Float64)# parameters d1,d2,e1
     mat = blocksPrA(prA,ja,jb,jc)
@@ -238,10 +261,10 @@ end
 
 
 
-export  fullUtensorA,  fullUtensorB, fullVtensorA, fullVtensorA
+export  fullUtensorA,  fullUtensorB, fullVtensorA, fullVtensorA    
 
 function fullUtensorA(prA::Array{Float64,12})
-    fullUT = zeros(x,x,x,x,x,x)
+    fullUT = zeros(x,x,x,x,x,x) 
     for jd1 in 0.:0.5:y, jd2 in 0.:0.5:y, je1 in 0.:0.5:y
         fullUT[Int(2*jd1+1),Int(2*jd2+1),Int(2*je1+1),:,:,:] = UtensorA(prA,jd1,jd2,je1)
     end
@@ -249,7 +272,7 @@ function fullUtensorA(prA::Array{Float64,12})
 end
 
 function fullVtensorA(prA::Array{Float64,12})
-    fullVT = zeros(x,x,x,x,x,x,x,x,x)
+    fullVT = zeros(x,x,x,x,x,x,x,x,x) 
     for jd1 in 0.:0.5:y, jd2 in 0.:0.5:y, je1 in 0.:0.5:y
         fullVT[Int(2*jd1+1),Int(2*jd2+1),Int(2*je1+1),:,:,:,:,:,:] = VtensorA(prA,jd1,jd2,je1)
     end
@@ -257,7 +280,7 @@ function fullVtensorA(prA::Array{Float64,12})
 end
 
 function fullUtensorB(prB::Array{Float64,12})
-    fullUT = zeros(x,x,x,x,x,x)
+    fullUT = zeros(x,x,x,x,x,x) 
     for jd1 in 0.:0.5:y, jd2 in 0.:0.5:y, je2 in 0.:0.5:y
         fullUT[Int(2*jd1+1),Int(2*jd2+1),Int(2*je2+1),:,:,:] = UtensorB(prB,jd1,jd2,je2)
     end
@@ -265,7 +288,7 @@ function fullUtensorB(prB::Array{Float64,12})
 end
 
 function fullVtensorB(prB::Array{Float64,12})
-    fullVT = zeros(x,x,x,x,x,x,x,x,x)
+    fullVT = zeros(x,x,x,x,x,x,x,x,x) 
     for jd1 in 0.:0.5:y, jd2 in 0.:0.5:y, je2 in 0.:0.5:y
         fullVT[Int(2*jd1+1),Int(2*jd2+1),Int(2*je2+1),:,:,:,:,:,:] = VtensorB(prB,jd1,jd2,je2)
     end
@@ -273,16 +296,16 @@ function fullVtensorB(prB::Array{Float64,12})
 end
 
 
-export prsmUAVB, prsmUBVA, prsmEff
+export prsmUAVB, prsmUBVA, prsmEff 
 
 function prsmUAVB(prA::Array{Float64,12},prB::Array{Float64,12})
     UA = fullUtensorA(prA)
     VB = fullVtensorB(prB)
     prsm = zeros(x,x,x,x,x,x,x,x,x,x,x,x)
-    for jb1 in 0.:0.5:y, jc1 in 0.:0.5:y, jd1 in 0.:0.5:y, jh1 in 0.:0.5:y, je11 in 0.:0.5:y, jf12 in 0.:0.5:y, ja2 in 0.:0.5:y, jf2 in 0.:0.5:y, jh2 in 0.:0.5:y, je21 in 0.:0.5:y, jg in 0.:0.5:y, jn in 0.:0.5:y
-        ans = UA[Int(2*jb1+1),Int(2*jd1+1),Int(2*jg+1),Int(2*jn+1),Int(2*jh1+1),Int(2*je11+1)] *
+    for jb1 in 0.:0.5:y, jc1 in 0.:0.5:y, jd1 in 0.:0.5:y, jh1 in 0.:0.5:y, je11 in 0.:0.5:y, jf12 in 0.:0.5:y, ja2 in 0.:0.5:y, jf2 in 0.:0.5:y, jh2 in 0.:0.5:y, je21 in 0.:0.5:y, jg in 0.:0.5:y, jn in 0.:0.5:y 
+        ans = UA[Int(2*jb1+1),Int(2*jd1+1),Int(2*jg+1),Int(2*jn+1),Int(2*jh1+1),Int(2*je11+1)] * 
                 VB[Int(2*jd1+1),Int(2*ja2+1),Int(2*jf2+1),Int(2*je21+1),Int(2*jn+1),Int(2*jh2+1),Int(2*jf12+1),Int(2*je11+1),Int(2*jc1+1)]
-        prsm[Int(2*jb1+1),Int(2*jc1+1),Int(2*jd1+1),Int(2*jh1+1),Int(2*je11+1),Int(2*jf12+1),Int(2*ja2+1),Int(2*jf2+1),Int(2*jh2+1),Int(2*je21+1),Int(2*jg+1),Int(2*jn+1)] = ans
+        prsm[Int(2*jb1+1),Int(2*jc1+1),Int(2*jd1+1),Int(2*jh1+1),Int(2*je11+1),Int(2*jf12+1),Int(2*ja2+1),Int(2*jf2+1),Int(2*jh2+1),Int(2*je21+1),Int(2*jg+1),Int(2*jn+1)] = ans 
     end
     return prsm
 end
@@ -293,10 +316,10 @@ function prsmUBVA(prA::Array{Float64,12},prB::Array{Float64,12})
     UB = fullUtensorB(prB)
     VA = fullVtensorA(prA)
     prsm = Array{Float64}(x,x,x,x,x,x,x,x,x,x,x,x)
-    for jb1 in 0.:0.5:y, jc1 in 0.:0.5:y, jd1 in 0.:0.5:y, jh1 in 0.:0.5:y, je11 in 0.:0.5:y, jf12 in 0.:0.5:y, ja2 in 0.:0.5:y, jf2 in 0.:0.5:y, jh2 in 0.:0.5:y, je21 in 0.:0.5:y, jg in 0.:0.5:y, jn in 0.:0.5:y
-        ans = UB[Int(2*jb1+1),Int(2*jd1+1),Int(2*jg+1),Int(2*jn+1),Int(2*jh1+1),Int(2*je11+1)] *
+    for jb1 in 0.:0.5:y, jc1 in 0.:0.5:y, jd1 in 0.:0.5:y, jh1 in 0.:0.5:y, je11 in 0.:0.5:y, jf12 in 0.:0.5:y, ja2 in 0.:0.5:y, jf2 in 0.:0.5:y, jh2 in 0.:0.5:y, je21 in 0.:0.5:y, jg in 0.:0.5:y, jn in 0.:0.5:y 
+        ans = UB[Int(2*jb1+1),Int(2*jd1+1),Int(2*jg+1),Int(2*jn+1),Int(2*jh1+1),Int(2*je11+1)] * 
                 VA[Int(2*jd1+1),Int(2*ja2+1),Int(2*jf2+1),Int(2*je21+1),Int(2*jn+1),Int(2*jh2+1),Int(2*jf12+1),Int(2*je11+1),Int(2*jc1+1)]
-        prsm[Int(2*jb1+1),Int(2*jc1+1),Int(2*jd1+1),Int(2*jh1+1),Int(2*je11+1),Int(2*jf12+1),Int(2*ja2+1),Int(2*jf2+1),Int(2*jh2+1),Int(2*je21+1),Int(2*jg+1),Int(2*jn+1)] = ans
+        prsm[Int(2*jb1+1),Int(2*jc1+1),Int(2*jd1+1),Int(2*jh1+1),Int(2*je11+1),Int(2*jf12+1),Int(2*ja2+1),Int(2*jf2+1),Int(2*jh2+1),Int(2*je21+1),Int(2*jg+1),Int(2*jn+1)] = ans 
     end
     return prsm
 end
@@ -313,7 +336,7 @@ function prsmEff(prA::Array{Float64,12},prB::Array{Float64,12})
             ans2 = pr2[Int(2*jb2+1),Int(2*jc2+1),Int(2*jd2+1),Int(2*jh2+1),Int(2*je22+1),Int(2*jf12+1),Int(2*ja1+1),Int(2*jf1+1),Int(2*jh1+1),Int(2*je12+1),Int(2*jg+1),Int(2*jn+1)]
             sum+= (ans1*ans2)
         end
-        prsm[Int(2*jb1+1),Int(2*jc1+1),Int(2*jd1+1),Int(2*je11+1),Int(2*ja2+1),Int(2*jf2+1),Int(2*je21+1),Int(2*jb2+1),Int(2*jc2+1),Int(2*jd2+1),Int(2*je12+1),Int(2*ja1+1),Int(2*jf1+1),Int(2*je22+1),Int(2*jh1+1),Int(2*jf12+1),Int(2*jh2+1),Int(2*jg+1)] = sum
+        prsm[Int(2*jb1+1),Int(2*jc1+1),Int(2*jd1+1),Int(2*je11+1),Int(2*ja2+1),Int(2*jf2+1),Int(2*je21+1),Int(2*jb2+1),Int(2*jc2+1),Int(2*jd2+1),Int(2*je12+1),Int(2*ja1+1),Int(2*jf1+1),Int(2*je22+1),Int(2*jh1+1),Int(2*jf12+1),Int(2*jh2+1),Int(2*jg+1)] = sum 
     end
     return prsm
 end

@@ -38,14 +38,41 @@ end
 
 
 #PrA = zeros(x,x,x,x,x,x,x,x,x,x,x,x)
-function dataA1()
+function dataPrA()
     ampsInfo = []
-    for ja1 in 0.:0.5:y, jb1 in 0.:0.5:y, jd1 in 0.:0.5:y, je1 in 0.:0.5:y, jf1 in 0.:0.5:y, ja2 in 0.:0.5:y, jb2 in 0.:0.5:y, jd2 in 0.:0.5:y, je2 in 0.:0.5:y, jf2 in 0.:0.5:y, jc in 0.:0.5:y, jg in 0.:0.5:y
-        if numchop( prismA(ja1,jb1,jd1,je1,jf1,ja2,jb2,jd2,je2,jf2,jc,jg)) != 0
-            ans = numchop( prismA(ja1,jb1,jd1,je1,jf1,ja2,jb2,jd2,je2,jf2,jc,jg))
-            indx = [ja1,jb1,jd1,je1,jf1,ja2,jb2,jd2,je2,jf2,jc,jg]
-            push!(ampsInfo,(indx,ans))
-            #push!(lindx,)
+    for jd1 in 0.:0.5:y, jd2 in 0.:0.5:y, je1 in 0.:0.5:y
+        if delta(jd1,jd2,je1) != 0 
+            for jb1 in 0.:0.5:y, jg in 0.:0.5:y
+                if delta(jd1,jb1,jg) != 0 
+                    for ja1 in 0.:0.5:y
+                        if delta(ja1,jd2,jg) != 0 && delta(ja1,jb1,je1) != 0
+                            for jc in 0.:0.5:y, jb2 in 0.:0.5:y
+                                if delta(jd1,jc,jb2) != 0
+                                    for jf1 in 0.:0.5:y
+                                        if delta(jf1,jd2,jb2) != 0 && delta(jf1,jc,je1) != 0
+                                            for ja2 in 0.:0.5:y, jf2 in 0.:0.5:y
+                                                if delta(jd1,ja2,jf2) != 0
+                                                    for je2 in 0.:0.5:y
+                                                        if delta(jc,je2,jf2) != 0 && delta(jb2,je2,ja2) != 0 #&& numchop( prismA(ja1,jb1,jd1,je1,jf1,ja2,jb2,jd2,je2,jf2,jc,jg)) != 0
+                                                            #if numchop( prismA(ja1,jb1,jd1,je1,jf1,ja2,jb2,jd2,je2,jf2,jc,jg)) != 0
+                                                            ans = numchop( prismA(ja1,jb1,jd1,je1,jf1,ja2,jb2,jd2,je2,jf2,jc,jg))
+                                                            if ans != 0
+                                                                indx = [ja1,jb1,jd1,je1,jf1,ja2,jb2,jd2,je2,jf2,jc,jg]
+                                                                push!(ampsInfo,(indx,ans))
+                                                                #push!(lindx,)
+                                                            end
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
         end
     end
     return ampsInfo
@@ -64,31 +91,6 @@ function dataB21()
     return ampsInfo
 end
 
-function blockReduceA1(ampJ::Array{Any,1},jd1::Float64,jd2::Float64,je1::Float64)
-    #a = Float64[] 
-    #b = Array{Int64,1}[]
-    #ampInfo = [] # will contain indices and amplitudes
-    # position of d1 = 3, d2= 8 and e1 = 4
-    ampInfo = ampJ[findall(x-> x[1][3] == jd1 && x[1][8] == jd2 && x[1][4] == je1 , ampJ)]
-    nzcol = Array{Float64,1}[]
-    #for ja1 in 0.:0.5:y, jb1 in 0.:0.5:y, jg in 0.:0.5:y
-    nzrow = Array{Float64,1}[]
-    for i in 1:length(ampInfo) # position of a1 = 1, b1 = 2 g = 12
-        unique!(push!(nzcol,[ampInfo[i][1][1],ampInfo[i][1][2],ampInfo[i][1][12]]))
-        unique!(push!(nzrow,[ampInfo[i][1][5],ampInfo[i][1][6],ampInfo[i][1][7],ampInfo[i][1][9],ampInfo[i][1][10],ampInfo[i][1][11]]))
-    end
-    dd = zeros(length(nzcol),length(nzrow))
-    if length(dd) != 0
-        for i in 1:length(ampInfo)
-            qa = findall(x-> x == [ampInfo[i][1][1], ampInfo[i][1][2], ampInfo[i][1][12]],nzcol)
-            qb = findall(x-> x == [ampInfo[i][1][5], ampInfo[i][1][6], ampInfo[i][1][7], ampInfo[i][1][9], ampInfo[i][1][10], ampInfo[i][1][11] ], nzrow)
-            dd[qa,qb] = [ampInfo[i][2]]
-        end
-        return nzcol,nzrow, dd
-    else
-        return 0,0,0
-    end
-end
 
 
 #PrB = zeros(x,x,x,x,x,x,x,x,x,x,x,x)
@@ -128,20 +130,21 @@ end
 
     
 function svdRA(ampInfo::Array{Any,1},ja::Float64,jb::Float64,jc::Float64)# parameters d1,d2,e1
-    mat = blockReduceA1(ampInfo,ja,jb,jc)[3]
+    mat = blockReduceA(ampInfo,ja,jb,jc)[3]
     U, s, V = svd(mat)
     #V = ctranspose(V)
     return (U,s,V)
 end
 
+
 #test1 = svdRA(ampsA,indxA,0.,0.,0.5)[3][2]
 #@time @show test1
 
-@time datA1 = dataA1();
-@time datPA = dataPrA();
+@time datA1 = dataPrA();
+#@time datPA = dataPrA();
 
-@time datB21 = dataB21();
-@time datPB2 = dataPrB2();
+#@time datB21 = dataB21();
+#@time datPB2 = dataPrB2();
 
 #@time for ja in 0.:0.5:y, jb in 0.:0.5:y, jc in 0.:0.5:y
 #    sing = svdA(datPA,ja,jb,jc)[2]
@@ -150,13 +153,18 @@ end
 #    end
 #end
 
-#@time for ja in 0.:0.5:y, jb in 0.:0.5:y, jc in 0.:0.5:y
-#    sing = svdRA(datA1,ja,jb,jc)[2]
-#    if sing[1] != 0
-#        println(sing[1:2])
-#    end
-#end
+@time for ja in 0.:0.5:y, jb in 0.:0.5:y, jc in 0.:0.5:y
+    sing = svdRA(datA1,ja,jb,jc)[2]
+    if sing[1] != 0
+        println(sing[1:2])
+    end
+end
 
+
+
+
+
+#@time @show blockReduceA1(datA1,0.,0.,0.)
 
 #@time println(svdA(PrA,0.0,0.5,0.5)[2][1:6])
 #@time for ja in 0.:0.5:y, jb in 0.:0.5:y, jc in 0.:0.5:y
@@ -175,7 +183,7 @@ end
 
 
 #@time for ja in 0.:0.5:y, jb in 0.:0.5:y, jc in 0.:0.5:y
-#    sing = svdRA(ampsB,indxB,ja,jb,jc)[2]
+#    sing = svdRA2(ampsB,indxB,ja,jb,jc)[2]
 #    if sing[1] != 0
 #        println(sing)
 #    end
